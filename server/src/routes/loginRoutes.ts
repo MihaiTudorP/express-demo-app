@@ -1,5 +1,9 @@
 import {Router, Request, Response} from 'express';
 
+interface RequestWithBody extends Request{
+    body: {[key: string]: string|undefined};
+}
+
 const router = Router();
 
 router.get('/login', (req: Request, res:Response) =>{
@@ -18,9 +22,37 @@ router.get('/login', (req: Request, res:Response) =>{
     `)
 });
 
-router.post('/login', (req: Request, res:Response) => {
+router.get('/', (req:Request, res: Response) => {
+    if (req.session && req.session.loggedIn){
+        res.send(`
+            <div>
+                <div>You are logged in</div>
+                <a href="/logout">Logout</a>
+            </div>
+        `);
+    } else {
+        res.send(`
+            <div>
+                <div>You are not logged in</div>
+                <a href="/login">Login</a>
+            </div>
+        `);
+    }
+});
+
+router.get('/logout', (req: Request, res: Response)=>{
+    req.session = undefined;
+    res.redirect('/');
+});
+
+router.post('/login', (req: RequestWithBody, res:Response) => {
     const{email, password} = req.body;
-    res.send(email + password);
+    if(email && password && email === 'mike@mikescourse.com' && password === 'AbcD@2020'){
+        //mark the user as logged in
+        req.session = { loggedIn: true };
+        //redirect them to the root route
+        res.redirect('/');
+    }
 });
 
 export { router };
